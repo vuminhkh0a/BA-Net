@@ -10,9 +10,7 @@ Technology, Hanoi 100000, Vietnam
 > Proc. 28th International Conference on Pattern Recognition (**ICPR 2026**, Lyon, France),
 > Part II, LNCS Vol. 16813, pp. 245–260, Springer.
 >
-> 📄 **Paper (PDF):** <https://link.springer.com/content/pdf/10.1007/978-3-032-31583-0_17>
-> 🔗 **DOI:** [10.1007/978-3-032-31583-0_17](https://doi.org/10.1007/978-3-032-31583-0_17)
-> 💻 **Source code:** <https://github.com/vuminhkh0a/BA-Net>
+> 📄 [Paper (PDF)](https://link.springer.com/content/pdf/10.1007/978-3-032-31583-0_17) · 🔗 [DOI](https://doi.org/10.1007/978-3-032-31583-0_17) · 💻 [Source code](https://github.com/vuminhkh0a/BA-Net)
 >
 > **Keywords:** Boundary refinement · Ovarian tumor · Segmentation · Semi-supervised learning · Pseudo-label
 
