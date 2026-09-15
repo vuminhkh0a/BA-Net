@@ -5,9 +5,9 @@ from pathlib import Path
 
 import torch
 
-from loss import joint_loss1
-from metrics import compute_hd95, dice_coef, jaccard_similarity, recall_precision
-from model import Proposed
+from utils.losses import joint_loss1
+from utils.metrics import compute_hd95, dice_coef, jaccard_similarity, recall_precision
+from models.banet import Proposed
 
 REPO_ROOT = Path(__file__).resolve().parent
 
@@ -58,10 +58,10 @@ def evaluate(loader, teacher, device, with_loss=True, with_standard_metrics=True
 
 def main(checkpoint=None, dataset_name='OTU', batch_size=4, num_workers=0,
          pin_memory=False, labeled_ratio=0.1, device_id='cuda:0', annotation_file=None):
-    from data import get_dataloaders
+    from data.loader import get_dataloaders
 
     device = torch.device(device_id)
-    checkpoint = Path(checkpoint) if checkpoint else (REPO_ROOT / "weight" / "proposed.pth")
+    checkpoint = Path(checkpoint) if checkpoint else (REPO_ROOT / "checkpoints" / "proposed.pth")
     print("Device:", device)
     print("Checkpoint:", checkpoint)
 
@@ -87,7 +87,7 @@ def main(checkpoint=None, dataset_name='OTU', batch_size=4, num_workers=0,
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Evaluate BA-Net (Proposed) on the test split")
-    parser.add_argument("--checkpoint", type=str, default=str(REPO_ROOT / "weight" / "proposed.pth"))
+    parser.add_argument("--checkpoint", type=str, default=str(REPO_ROOT / "checkpoints" / "proposed.pth"))
     parser.add_argument("--dataset_name", type=str, default='OTU')
     parser.add_argument("--batch_size", type=int, default=4)
     parser.add_argument("--num_workers", type=int, default=0)

@@ -3,7 +3,7 @@
 Consolidates the former ``pytorch_iou`` and ``pytorch_ssim`` packages
 (``IOU`` and ``SSIM`` modules) so no extra sub-packages are required.
 Evaluation-only scores (Dice, Jaccard, precision/recall, HD95) live in
-``metrics.py``.
+``utils/metrics.py``.
 """
 from math import exp
 
@@ -12,7 +12,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 
-from metrics import dice_coef
+from utils.metrics import dice_coef
 
 # ---------------------------------------------------------------------------
 # SSIM (from pytorch-ssim: https://github.com/Po-Hsun-Su/pytorch-ssim)
@@ -130,7 +130,7 @@ def Ssim_loss(y_true, y_pred, max_val=1.0):
 
 
 def jacard_loss(y_true, y_pred):
-    from metrics import jaccard_similarity
+    from utils.metrics import jaccard_similarity
     return 1.0 - jaccard_similarity(y_true, y_pred)
 
 

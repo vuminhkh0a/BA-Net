@@ -13,10 +13,10 @@ from pathlib import Path
 import torch
 import torch.optim as optim
 
-from data import get_dataloaders
-from loss import MSE_loss, muti_bce_loss_fusion, unlabeled_loss
-from model import Proposed
-from ramp import sigmoid_rampup
+from data.loader import get_dataloaders
+from utils.losses import MSE_loss, muti_bce_loss_fusion, unlabeled_loss
+from models.banet import Proposed
+from utils.ramp import sigmoid_rampup
 from test import evaluate
 
 REPO_ROOT = Path(__file__).resolve().parent
@@ -123,7 +123,7 @@ def main(image_size=256, batch_size=4, num_workers=0, pin_memory=False,
     global global_step
 
     device = torch.device(device_id)
-    best_model_path = Path(best_model_path) if best_model_path else (REPO_ROOT / "weight" / "proposed.pth")
+    best_model_path = Path(best_model_path) if best_model_path else (REPO_ROOT / "checkpoints" / "proposed.pth")
     best_model_path.parent.mkdir(parents=True, exist_ok=True)
     print("Device:", device)
     print("Proposed")
@@ -206,7 +206,7 @@ if __name__ == "__main__":
     parser.add_argument("--learning_rate", type=float, default=0.001)
     parser.add_argument("--device_id", type=str, default='cuda:0')
     parser.add_argument("--best_model_path", type=str,
-                        default=str(REPO_ROOT / "weight" / "proposed.pth"))
+                        default=str(REPO_ROOT / "checkpoints" / "proposed.pth"))
     parser.add_argument("--annotation_file", type=str, default=None)
     parser.add_argument("--start_ema_coef", type=float, default=0.99)
     parser.add_argument("--end_ema_coef", type=float, default=0.999)

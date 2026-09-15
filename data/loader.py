@@ -18,7 +18,7 @@ from torch.utils.data import DataLoader, Dataset, Sampler
 # ---------------------------------------------------------------------------
 # Paths (relative to this repository; override with env var if needed)
 # ---------------------------------------------------------------------------
-REPO_ROOT = Path(__file__).resolve().parent
+REPO_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_DATA_ROOT = (REPO_ROOT.parent / "OTU-2D-Dataset").resolve()
 DATA_ROOT = Path(os.environ.get("OTU_2D_DATASET_ROOT", str(DEFAULT_DATA_ROOT)))
 ANNOTATION_FILE = DATA_ROOT / "OTU_2D_annotation.json"

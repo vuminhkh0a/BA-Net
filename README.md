@@ -72,7 +72,7 @@ by the **Boundary Refinement Module (BRM)**, f<sub>BRM</sub>(·).
 - PM decoder side-outputs: ŷ<sub>j</sub> = f<sub>j</sub>(x), j ∈ {1,…,4}, each auxiliary block a
   3×3 convolution + up-sampling + sigmoid.
 - Final output: ŷ<sub>BRM</sub> from the BRM.
-- In code (`model.py: Proposed`) this is the 5-tuple `(s0, s1, s2, s3, s4)` = (refined BRM output,
+- In code (`models/banet.py: Proposed`) this is the 5-tuple `(s0, s1, s2, s3, s4)` = (refined BRM output,
   coarse PM output, three upsampled side-outputs); only `s0` is used at inference (`test.py`).
 
 ### 2.2 Two-phase training
@@ -87,7 +87,7 @@ L<sub>cons</sub>. The Teacher follows EMA:
 
 θ′<sub>t</sub> = α·θ′<sub>t−1</sub> + (1 − α)·θ<sub>t</sub>,&nbsp;&nbsp;(1)
 
-with α ramped 0.99 → 0.999 (`ramp.py` sigmoid ramp-up). Objective: L<sub>pre</sub> = L<sub>lab</sub> + λ·L<sub>cons</sub>.
+with α ramped 0.99 → 0.999 (`utils/ramp.py` sigmoid ramp-up). Objective: L<sub>pre</sub> = L<sub>lab</sub> + λ·L<sub>cons</sub>.
 
 **Phase 2 — Self-training** (`train.py: self_train_one_epoch`). The frozen best pre-training
 Teacher (kept as `pseudo_label_generator` in code) converts Teacher predictions on D<sub>u</sub>
@@ -96,7 +96,7 @@ y<sup>u</sup><sub>r</sub> (from the BRM). Batches are drawn with `TwoStreamBatch
 labeled). The Student optimizes L<sub>lab</sub> + L<sub>unlab</sub> + L<sub>cons</sub> while Teacher
 EMA continues. Objective: L<sub>self</sub> = L<sub>lab</sub> + λ·L<sub>cons</sub> + β·L<sub>unlab</sub>.&nbsp;&nbsp;(5)
 
-**Dual-view augmentation** (`data.py`): shared geometric transforms (D4, resized-crop, rotation)
+**Dual-view augmentation** (`data/loader.py`): shared geometric transforms (D4, resized-crop, rotation)
 keep the Student/Teacher pair aligned; then *strong* photometric noise for the Student (blur,
 color jitter, gray) versus *weak* noise for the Teacher.
 
@@ -106,11 +106,11 @@ Adapted from the Residual Refinement Module of BASNet: a lightweight residual en
 which **each stage holds a single 3×3 convolution with fixed width 64** (no channel doubling),
 2×2 non-overlapping MaxPool down-sampling, and bilinear up-sampling. The design deliberately
 avoids high-level semantic re-learning so the module concentrates on spatial-detail recovery from
-the coarse map. In code: `model.py: RefUnet`.
+the coarse map. In code: `models/banet.py: RefUnet`.
 
 ### 2.4 Loss functions
 
-**Supervised + consistency** (`loss.py`). Labeled loss is the BASNet hybrid (pixel-level BCE +
+**Supervised + consistency** (`utils/losses.py`). Labeled loss is the BASNet hybrid (pixel-level BCE +
 patch-level SSIM + map-level IoU) summed over all five outputs (j = 1…4 PM side-outputs, j = 5 BRM):
 
 L<sub>lab</sub> = Σ<sup>5</sup><sub>j=1</sub> [L<sub>BCE</sub> + L<sub>IoU</sub> + L<sub>SSIM</sub>].&nbsp;&nbsp;(2)
@@ -134,29 +134,36 @@ near boundaries → BCE enforces exact pixel alignment. In code this is `unlabel
 
 | Paper symbol | Code |
 |---|---|
-| PM f(·), side-outputs ŷ<sub>j</sub>, j∈{1…4} | `model.py: Proposed` decoder + `side_conv1–3`, returned as `s2, s3, s4` (+coarse `s1`) |
-| BRM f<sub>BRM</sub>(·), ŷ<sub>BRM</sub> | `model.py: RefUnet`, returned as `s0` |
-| L<sub>lab</sub> (Eq. 2) | `loss.py: muti_bce_loss_fusion` (BCE+SSIM+IoU × 5 outputs) |
-| L<sub>cons</sub> (Eq. 3) | `loss.py: MSE_loss` summed over 5 outputs |
-| L<sub>unlab</sub> (Eq. 4) | `loss.py: unlabeled_loss` |
-| EMA (Eq. 1), λ/β ramp-up | `train.py: update_ema_variables`, `ramp.py: sigmoid_rampup` |
+| PM f(·), side-outputs ŷ<sub>j</sub>, j∈{1…4} | `models/banet.py: Proposed` decoder + `side_conv1–3`, returned as `s2, s3, s4` (+coarse `s1`) |
+| BRM f<sub>BRM</sub>(·), ŷ<sub>BRM</sub> | `models/banet.py: RefUnet`, returned as `s0` |
+| L<sub>lab</sub> (Eq. 2) | `utils/losses.py: muti_bce_loss_fusion` (BCE+SSIM+IoU × 5 outputs) |
+| L<sub>cons</sub> (Eq. 3) | `utils/losses.py: MSE_loss` summed over 5 outputs |
+| L<sub>unlab</sub> (Eq. 4) | `utils/losses.py: unlabeled_loss` |
+| EMA (Eq. 1), λ/β ramp-up | `train.py: update_ema_variables`, `utils/ramp.py: sigmoid_rampup` |
 | Phase 1 / Phase 2 | `train.py: pre_train_one_epoch` / `self_train_one_epoch` |
 | Frozen pre-train Teacher as PL source | `train.py: pseudo_label_generator` |
-| Metrics (DSC, IoU, HD95) | `metrics.py`, aggregated by `test.py: evaluate` |
+| Metrics (DSC, IoU, HD95) | `utils/metrics.py`, aggregated by `test.py: evaluate` |
 
 ## 3. Repository Structure
 
 ```text
 BA-Net/
-├── train.py          # two-stage Mean-Teacher training (pre-train + self-train + test)
-├── test.py           # evaluate() shared by training + standalone test entry point
-├── data.py           # OTU_2D loaders, dual-view augmentation, TwoStreamBatchSampler
-├── loss.py           # all training losses (SSIM/IOU consolidated here)
-├── metrics.py        # Dice, Jaccard, precision/recall, HD95
-├── model.py          # Proposed (PM + BRM/RefUnet) + MT/HCRMT/Unet/BASNet variants
-├── resnet_model.py   # residual blocks for the BASNet variant
-├── ramp.py           # sigmoid ramp-up schedule
-├── weight/           # checkpoints (e.g. weight/proposed.pth; git-ignored)
+├── train.py              # two-stage Mean-Teacher training (pre-train + self-train + test)
+├── test.py               # evaluate() shared by training + standalone test entry point
+├── requirements.txt
+├── data/
+│   ├── __init__.py
+│   └── loader.py         # OTU_2D loaders, dual-view augmentation, TwoStreamBatchSampler
+├── models/
+│   ├── __init__.py
+│   ├── banet.py          # Proposed (PM + BRM/RefUnet) + MT/HCRMT/Unet/BASNet variants
+│   └── resnet.py         # residual blocks for the BASNet variant
+├── utils/
+│   ├── __init__.py
+│   ├── losses.py         # all training losses (SSIM/IOU consolidated here)
+│   ├── metrics.py        # Dice, Jaccard, precision/recall, HD95
+│   └── ramp.py           # sigmoid ramp-up schedule
+├── checkpoints/          # trained weights (e.g. checkpoints/proposed.pth; git-ignored, LFS)
 └── README.md
 ```
 
@@ -184,7 +191,7 @@ export OTU_2D_DATASET_ROOT=/path/to/OTU-2D-Dataset
 ## 5. Installation
 
 ```bash
-pip install torch torchvision albumentations opencv-python numpy
+pip install -r requirements.txt
 ```
 
 ## 6. Usage
@@ -195,7 +202,7 @@ pip install torch torchvision albumentations opencv-python numpy
 cd BA-Net
 python train.py --dataset_name OTU --labeled_ratio 0.1 \
     --pre_epochs 50 --epochs 50 --batch_size 4 \
-    --device_id cuda:0 --best_model_path weight/proposed.pth
+    --device_id cuda:0 --best_model_path checkpoints/proposed.pth
 ```
 
 Key options: `--labeled_ratio`, `--pre_epochs`, `--epochs`, `--max_lambda` (λ, consistency),
@@ -205,7 +212,7 @@ Key options: `--labeled_ratio`, `--pre_epochs`, `--epochs`, `--max_lambda` (λ, 
 ### 6.2 Test
 
 ```bash
-python test.py --checkpoint weight/proposed.pth --dataset_name OTU --batch_size 4
+python test.py --checkpoint checkpoints/proposed.pth --dataset_name OTU --batch_size 4
 ```
 
 Reports Dice, Jaccard/IoU, Precision, Recall, and HD95 on the test split.
