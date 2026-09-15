@@ -210,15 +210,7 @@ python test.py --checkpoint weight/proposed.pth --dataset_name OTU --batch_size 
 
 Reports Dice, Jaccard/IoU, Precision, Recall, and HD95 on the test split.
 
-## 7. Results
-
-With 10% labeled data on **OTU_2D**, the paper reports **76.77% DSC**, a ≈10-point gain over the
-HCR-MT baseline (66.85% DSC), with consistent improvements in boundary delineation on OvaTUS and
-USOVA3D. See the paper's result tables and qualitative boundary comparisons in the published PDF
-([link](https://link.springer.com/content/pdf/10.1007/978-3-032-31583-0_17)). Run §6 above to
-reproduce the numbers with your local data split.
-
-## 8. Citation
+## 7. Citation
 
 ```bibtex
 @inproceedings{VuBL26,
@@ -235,7 +227,7 @@ reproduce the numbers with your local data split.
 }
 ```
 
-## 9. Acknowledgements
+## 8. Acknowledgements
 
 Funded by the Ministry of Science and Technology (MOST) under grant KC4.0-45/19-25. The BRM
 follows the Residual Refinement Module of BASNet; the SSIM implementation is adapted from
